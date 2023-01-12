@@ -1,7 +1,7 @@
 ---
 title: "Assignment 1b: Replicating *Sexual Orientation and Labor Economics* by Cara Brown (1998)"
 author: "Daniel Sánchez"
-date: "Due Jan. 19th 2023"
+date: "2023-01-12"
 format: pdf
 knitr:
   opts_chunk: 
@@ -43,16 +43,26 @@ df<-
   df %>% 
   rename(income = 'empin')
 
-# Now, replace the invalid values (88,888,888, 99,999,999) with actual NAs in R.
+# Now, replace the income invalid values (88,888,888, 99,999,999) with actual NAs in R.
 
 df <-
   df %>% 
-  mutate(income_clean = 
-    case_when(
+  mutate(income_clean = case_when(
       income %in% c(88888888, 99999999) ~ as.numeric(NA),
       TRUE ~ income
     )
   )
+
+# Do something similar for the age group variable (agegrp)
+
+df <- 
+  df %>% 
+  mutate(agegrp = 
+           case_when(
+             agegrp == 88 ~ as.numeric(NA),
+             TRUE ~ agegrp
+           )
+         )
 
 ```
 
@@ -60,12 +70,13 @@ df <-
 I now group by household and count the number of individuals in them.
 
 ```{r}
-#| label: prelim-cleaning
+#| label: household-group
 
 households <-
   df %>% 
   group_by(HH_ID) %>% 
-  summarise(people = n())
+  summarise(people = n(),
+            families = n_distinct(EF_ID))
 ```
 
 
