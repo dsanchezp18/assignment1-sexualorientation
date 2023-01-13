@@ -67,14 +67,12 @@ df %>% select(PP_ID, agegrp, income_clean) %>% head()
 
 # Do the same data cleaning with gender
 
-df$sex <- as_factor(df$sex)
-
 df <-
   df %>% 
   mutate(sex = case_when(
-    sex == 'Not available' ~ as.factor(NA),
-    TRUE ~ sex
-  ))
+    sex == 8 ~ as.double(NA),
+    TRUE ~ as.double(sex)
+    ))
 
 ```
 Let us group by person and count how much records I have for that. Test to see if there is more than one observation per person
@@ -108,7 +106,7 @@ df <-
   df %>% 
   mutate(non_rel = ifelse(cfstat == 7, 1, 0))
 
-# Now, do the grouping at the houshold level, filtering out the people whose age we're not interested in
+# Now, do the grouping at the household level, filtering out the people whose age we're not interested in
 
 households <-
   df %>% 
@@ -123,7 +121,51 @@ head(households)
 
 ```
 
+We will determine if a household potentially has homosexual people in it (individuals unrelated through family) by marking households which have a greater number of people in the house compared to the number of genders. If there is, for instance, a house with 3 people in it where at least one of them is unrelated in family terms and only two genders, there is a potential homosexual couple living in the household. As I have no more than this, I have no choice to later "mark" all of the people living in the household as homosexual. 
+
+Below, I will create the `hmsxl` indicator at the household level, and later left join this data to the individual level dataframe to mark each individual as presumed homosexuals.
+
+```{r}
+#| label: homosexual-indicator
+
+# Create the indicator
+
+households <-
+  households %>% 
+  mutate(hmsxl = ifelse(non_rel >= 1 & people > sexes, 'Homosexual','Heterosexual')) %>% 
+  select(HH_ID, hmsxl)
+
+# Make it at the individual level
+
+df <-
+  df %>%
+  filter(agegrp %in% c(9,10,11)) %>% 
+  left_join(households, by = 'HH_ID') %>% 
+  mutate(hmsxl = as.factor(hmsxl))
+
+```
 
 
+I can now compute conditional means for income based on ages and whether or not they're homosexual.
+
+```{r}
+#| label: tables
+#| results: asis
+
+df_table<-
+  df %>% 
+  mutate(agegrp = case_when(
+         agegrp %in% c(9,10) ~ '45-54',
+         agegrp == 11 ~ '55-64'),
+         sex = ifelse(sex == 1, 'Female', 'Male'),
+         hmsxl = as.factor(hmsxl),
+         MarStH = as_factor(MarStH)) %>% 
+  select(hmsxl, agegrp, income_clean, sex, MarStH)
+
+datasummary((income_clean * hmsxl * MarStH) ~ (Mean*sex*agegrp), 
+            data = df_table,
+            output = 'markdown')
+
+```
 
 
