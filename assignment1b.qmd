@@ -20,6 +20,8 @@ I need the following R libraries to make this code work:
 #| warning: false
 library(tidyverse) # For data wrangling
 library(haven) # Reading stata files
+library(labelled) # For survey labels
+library(modelsummary) # For tables
 ```
 
 I load the data from the given file below:
@@ -30,18 +32,26 @@ df<-
   read_dta('data/Census_2016_Hierarchial.dta')
 ```
 
-# Exploratory Analysis & Data Wrangling
+# Data Cleaning
 
-I run some exploratory analysis which motivates my wrangling/cleaning of the data set to make it fit for the analysis below. 
+In this subsection I do some data cleaning and exploratory analysis so that I build a fit dataframe for the replication study.
+
+Below, I clean the income and age group variables to have them as I'd need to in the replication. Note I use *haven*'s `as_factor()`, not base R `as.factor()`. We also filter for the ages we'd like to use, then create another age group which combines 45 to 49 with 50 to 54 to create 45-54.
 
 ```{r}
 #| label: prelim-cleaning
+#| warning: false
 
 # First, rename the income variable (empin) to something more usable
+# Also, we apply value labels as necessary in the mutate() call
 
 df<-
   df %>% 
-  rename(income = 'empin')
+  rename(income = 'empin') %>% 
+  mutate(agegrp = case_when(
+    agegrp ==  88 ~ as.double(NA),
+    TRUE ~ as.double(agegrp)
+  ))
 
 # Now, replace the income invalid values (88,888,888, 99,999,999) with actual NAs in R.
 
@@ -53,32 +63,65 @@ df <-
     )
   )
 
-# Do something similar for the age group variable (agegrp)
+df %>% select(PP_ID, agegrp, income_clean) %>% head()
 
-df <- 
+# Do the same data cleaning with gender
+
+df$sex <- as_factor(df$sex)
+
+df <-
   df %>% 
-  mutate(agegrp = 
-           case_when(
-             agegrp == 88 ~ as.numeric(NA),
-             TRUE ~ agegrp
-           )
-         )
+  mutate(sex = case_when(
+    sex == 'Not available' ~ as.factor(NA),
+    TRUE ~ sex
+  ))
+
+```
+Let us group by person and count how much records I have for that. Test to see if there is more than one observation per person
+
+```{r}
+#| label: person-group
+
+people <-
+  df %>% 
+  group_by(PP_ID) %>% 
+  summarise(obs= n())
+
+people %>% filter(obs != 1)
 
 ```
 
+There is only one observation per person in the dataset, as expected
 
-I now group by household and count the number of individuals in them.
+# Constructing the presumed homosexual variable
+
+I now construct a dummy variable `hmsxl` which is 1 if the individual is a presumed homosexual and 0 otherwise. The variable is complicated to build as it depends on many things. 
+
+First, I will pay attention to the people who live with non-relatives only. I can see this variable from the `cfstat` variable in the census. These are potential couples to someone else, so I will create a dummy for these people, `non_rel`.
 
 ```{r}
-#| label: household-group
+#| label: non-rel
+
+# Create the variable
+
+df <-
+  df %>% 
+  mutate(non_rel = ifelse(cfstat == 7, 1, 0))
+
+# Now, do the grouping at the houshold level, filtering out the people whose age we're not interested in
 
 households <-
   df %>% 
+  filter(agegrp %in% c(9,10,11)) %>% 
   group_by(HH_ID) %>% 
-  summarise(people = n(),
-            families = n_distinct(EF_ID))
-```
+  summarise(non_rel = sum(non_rel),
+            people = n(),
+            sexes = n_distinct(sex)) %>% 
+  arrange(desc(non_rel))
 
+head(households)
+
+```
 
 
 
