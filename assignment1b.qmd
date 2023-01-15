@@ -22,6 +22,7 @@ library(tidyverse) # For data wrangling
 library(haven) # Reading stata files
 library(labelled) # For survey labels
 library(modelsummary) # For tables
+library(data.table) # For combinations
 ```
 
 I load the data from the given file below:
@@ -137,7 +138,7 @@ households <-
 
 # Make it at the individual level
 
-df <-
+df_joint <-
   df %>%
   filter(agegrp %in% c(9,10,11)) %>% 
   left_join(households, by = 'HH_ID') %>% 
@@ -153,7 +154,7 @@ I can now compute conditional means for income based on ages and whether or not 
 #| results: asis
 
 df_table<-
-  df %>% 
+  df_joint %>% 
   mutate(agegrp = case_when(
          agegrp %in% c(9,10) ~ '45-54',
          agegrp == 11 ~ '55-64'),
@@ -168,4 +169,29 @@ datasummary((income_clean * hmsxl * MarStH) ~ (Mean*sex*agegrp),
 
 ```
 
+# Doing the same with a pairwise approach
+
+An alternative method is to start with the database from scratch as it is, filter out for the people that we want, and then define a new data frame that now creates all possible pairs of two people. We will filter out the dataframe for the people that we need, then
+
+```{r}
+#| label: all-pairs
+
+df_for_pairs <- 
+  df %>% 
+  filter(agegrp %in% c(9,10,11),
+         MarStH == 1) %>% 
+  mutate(person_id = as.character(PP_ID))
+
+pairs <- 
+  CJ(df_for_pairs$PP_ID, df_for_pairs$PP_ID, unique = T) %>% 
+  rename(person1 = 'V1', person2 = 'V2') %>% 
+  mutate(identical = (person1 == person2)) %>% 
+  filter(identical == FALSE)
+
+combinations <- combn(unique(df_for_pairs$PP_ID),2) %>% t()
+```
+
+Having done the pairs, we will need to get their household information as well as their sex and other variables as well. We use joins for this. 
+
+# With a for loop
 
