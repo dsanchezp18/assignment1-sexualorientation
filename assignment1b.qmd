@@ -146,7 +146,6 @@ df_joint <-
 
 ```
 
-
 I can now compute conditional means for income based on ages and whether or not they're homosexual.
 
 ```{r}
@@ -188,7 +187,7 @@ pairs <-
   mutate(identical = (person1 == person2)) %>% 
   filter(identical == FALSE)
 
-combinations <- combn(unique(df_for_pairs$PP_ID),2) %>% t()
+# combinations <- combn(unique(df_for_pairs$PP_ID),2) %>% t() This takes too long
 ```
 
 Having done the pairs, we will need to get their household information as well as their sex and other variables as well. We use joins for this. 
@@ -198,8 +197,5 @@ Having done the pairs, we will need to get their household information as well a
 
 # Another approach
 
-```{r}
-
-```
 
 
