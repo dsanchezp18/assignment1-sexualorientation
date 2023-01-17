@@ -157,12 +157,15 @@ df_table<-
   mutate(agegrp = case_when(
          agegrp %in% c(9,10) ~ '45-54',
          agegrp == 11 ~ '55-64'),
-         sex = ifelse(sex == 1, 'Female', 'Male'),
+         sex = ifelse(sex == 1, 'F', 'M'),
          hmsxl = as.factor(hmsxl),
          MarStH = as_factor(MarStH)) %>% 
-  select(hmsxl, agegrp, income_clean, sex, MarStH)
+  rename(Income = 'income_clean',
+         Orientation = 'hmsxl',
+         MarStatus = 'MarStH') %>% 
+  select(Orientation, agegrp, Income, sex, MarStatus)
 
-datasummary((income_clean * hmsxl * MarStH) ~ (Mean*sex*agegrp), 
+datasummary((Income * Orientation* MarStatus) ~ (Mean*sex*agegrp), 
             data = df_table,
             output = 'markdown')
 
@@ -191,11 +194,3 @@ pairs <-
 ```
 
 Having done the pairs, we will need to get their household information as well as their sex and other variables as well. We use joins for this. 
-
-# With a for loop
-
-
-# Another approach
-
-
-
