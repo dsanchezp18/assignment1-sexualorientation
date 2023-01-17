@@ -1,0 +1,21 @@
+---
+title: 'Assignment 1b: Replicating Brown (1998)'
+author: "Daniel Sánchez"
+date: "Due January 19th, 2023"
+output: pdf_document
+---
+
+Cara Brown's 1998 paper *Sexual Orientation and Labor Economics* published at *Feminist Economics* looks at the wage differential between heterosexual and homosexual Canadians. In this replication, I attempt to capture the sample that she did by looking at 2016 Hierarchical Census Data. 
+ 
+The code for my replication is contained in the `solution1.R` file in the folder which I've sent. Below, I present the table of means that I obtained.
+
+|Sexual Orientation  |Marital Status            | Female / 45 to 54| Female / 55 to 64| Male / 45 to 54| Male / 55 to 64|
+|:------------|:---------------------|-----------------:|-----------------:|---------------:|---------------:|
+|Heterosexual |Married or Common Law |          50651.04|          41059.36|        82522.73|        70181.58|
+|             |Separated or Widowed  |          48245.20|          40302.09|        66065.18|        54281.52|
+|             |Single                |          50667.73|          45642.52|        52113.41|        42473.76|
+|Homosexual   |Married or Common Law |          54589.34|          50088.27|        71395.28|        58777.85|
+|             |Separated or Widowed  |          35277.78|          43615.38|        43142.86|        38107.14|
+|             |Single                |          53825.80|          42866.67|        46982.46|        38145.88|
+
+You may notice that there are some differences with Cara Brown's original table of means. This is due to the fact that the institutional background in Canada has significantly changed since 1998. This has negatively affected the possibility to capture the sample which Brown captures. The main difference is that, back when Cara Brown wrote her paper, marriage for -

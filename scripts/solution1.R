@@ -1,17 +1,23 @@
-# Another solution
+# Assignment 1b: Replicating *Sexual Orientation and Labor Economics* by Cara Brown (1998)
 
-#Libraries
+# Daniel Sanchez
+# ECON836
+# Due January 19th, 2023
+
+# Preliminaries -------------------------------------------------------------------------------------------
+
+# Libraries
 
 library(tidyverse) # For data wrangling
 library(haven) # Reading stata files
-library(labelled) # For survey labels
 library(modelsummary) # For tables
-library(data.table) # For combinations
 
-# Load data
+# Load data with the haven package as it is in a .dta file
 
 df<-
-  read_dta('data/Census_2016_Hierarchial.dta') 
+  read_dta('data/Census_2016_Hierarchial.dta')  # Alternatively, use read_stata()
+
+# Data Cleaning -------------------------------------------------------------------------------------------
 
 # Eliminate all ages we're not interested in and remove all missing values in variables of interest
 
@@ -21,13 +27,13 @@ df<-
          sex != 8,
          MarStH != 8,
          empin != 88888888,
-         empin != 99999999)
+         empin != 99999999) 
 
-# Married Gays --------------------------------------------------------------------------------------------
+# Capturing the sample of presumed homosexuals ------------------------------------------------------------
 
 # Create a new helper variable to see if they are married or common law
 
-# These people either have children or not, but nothing else in the cfstructure
+# These people either have children or not (two possible responses in the cfstat variable)
 
 df <- 
   df %>% 
@@ -118,7 +124,8 @@ df <-
 # Now make the table
 
 datasummary(Income * Orientation * MarStatus ~ Mean*Sex*Age, 
-            data = df)
+            data = df,
+            output = 'markdown')
 
 # Robustness Checks ---------------------------------------------------------------------------------------
 
