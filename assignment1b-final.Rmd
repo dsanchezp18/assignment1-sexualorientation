@@ -5,17 +5,173 @@ date: "Due January 19th, 2023"
 output: pdf_document
 ---
 
+# General comments
+
 Cara Brown's 1998 paper *Sexual Orientation and Labor Economics* published at *Feminist Economics* looks at the wage differential between heterosexual and homosexual Canadians. In this replication, I attempt to capture the sample that she did by looking at 2016 Hierarchical Census Data. 
+
+Below, I include my code which creates the tables that I have included above.
+
+# Preliminaries
+
+Here I load my libraries and the dataset.
+
+```{r, setup}
+
+# Set my default code chunk options
+knitr::opts_chunk$set(
+  echo = T, 
+  warning = F,
+  error = F,
+  message = F
+)
+
+# Load my libraries
+
+library(tidyverse) # For data wrangling
+library(haven) # Reading stata files
+library(modelsummary) # For tables
+
+# Load my data
+
+hierarchical_data <-
+  read_dta('data/Census_2016_Hierarchial.dta')
+
+```
+
+
+# Homosexual Indicator, Cara Brown approach
+
+I now replicate the homosexual indicator with an attempt at Cara Brown's approach. You will see that I was not able to fully capture the same sample due to a problem with family, which I talk about above.
+
+## Cleaning
+
+In this section, I focus on cleaning my dataset for further use. In the following code chunk, I basically take all of my variables of interest then drop out the data which I don't need or that has any kind of missing value. I do this based on the catalogue.
+
+```{r, cleaning}
+
+df<-
+  hierarchical_data %>% 
+  filter(agegrp %in% c(9,10,11),
+         !(empin %in% c(88888888, 99999999)),
+         sex != 8,
+         !(MarStH %in% c(3,8)),
+         fptwk == 1,
+         wkswrk == 6,
+         ) %>% 
+  rename(income = 'empin') %>% 
+  mutate(single = ifelse(MarStH == 1,1,0))
+
+```
+
+I drop the missing values rather than applying an `NA` to them since I only need to create a table of means where I explicitly know what is the data that I need. If I were to run a regression, I'd most likely wouldn't do that. 
+
+My code above only considers age groups 9,10 and 11 which are the ones that Cara Brown used for her paper. Further, I consider only people that have worked full time, and also people who have worked for the full year. I drop those who live under common law, as the original paper did not consider that type of people (likely because some institutional context difference). From examining the variable of marital status, `MarStH`, it is evident I won't be able to clearly replicate the table Brown did, since there is no longer a separation between Widowed and separated. 
+
+## Aggregating at the household level
+
+I use the household identifier, `HH_ID`, to group the dataset at the household level, creating different variables which summarize the individual-level dataset. I then filter for houses that only have two people living in them (after filtering out people who are not in my age group, that is). I must do this simplification in order to be able to accurately identify homosexuals, because when there are houses of more than one person, I cannot be sure if there are homosexual pairs or heterosexual, since we don't know who is related to whom. 
+
+I then consider the marital status of the people who are potentially homosexual. As Cara Brown did, I only consider (legally) single people. This is an incorrect approach, since by 2016 marriage between same-sex couples was allowed. I will fix that later. I also count the **distinct** number of both economic and census families within that household.
+
+```{r, household-aggregation}
+
+households<-
+  df %>% 
+  group_by(HH_ID) %>% 
+  summarise(people = n(),
+            sexes = n_distinct(sex),
+            singles = sum(single),
+            families_econ = n_distinct(EF_ID),
+            families_census= n_distinct(CF_ID)) %>% 
+  filter(people == 2) %>% 
+  mutate(
+    hmsxl = case_when(
+      singles == 2 & people > sexes ~ 'Homosexual',
+      TRUE ~ 'Heterosexual'
+  ))
+
+```
+
+Now, I will have a (presumed) `hmsxl` indicator which captures, in a way, the same sample that Cara Brown did. The most important problem is that I cannot know if the people who are contained in that sample are related by blood or not, at least not in an exact way. This is because I cannot be sure that the people who I have labeled as homosexual are not related in some way. This is because both definitions of family in this census, do not consider "extended" family which doesn't live in the same household. However, it is still plausible for two cousins to live together and also both them could be single. However, without last names or a better family indicator, I cannot really do anything with the economic families.
+
+ I do a robustness check below, where I group each economic and census family next to each other and present the results. I determine that there are no economic or census families scattered across different households. It is unlikely to believe that there are no families in Canada which are scattered across different households. 
  
-The code for my replication is contained in the `solution1.R` file in the folder which I've sent. Below, I present the table of means that I obtained.
+```{r econ-families}
 
-|Sexual Orientation  |Marital Status            | Female / 45 to 54| Female / 55 to 64| Male / 45 to 54| Male / 55 to 64|
-|:------------|:---------------------|-----------------:|-----------------:|---------------:|---------------:|
-|Heterosexual |Married or Common Law |          50651.04|          41059.36|        82522.73|        70181.58|
-|             |Separated or Widowed  |          48245.20|          40302.09|        66065.18|        54281.52|
-|             |Single                |          50667.73|          45642.52|        52113.41|        42473.76|
-|Homosexual   |Married or Common Law |          54589.34|          50088.27|        71395.28|        58777.85|
-|             |Separated or Widowed  |          35277.78|          43615.38|        43142.86|        38107.14|
-|             |Single                |          53825.80|          42866.67|        46982.46|        38145.88|
+econ_families <-
+  hierarchical_data %>% 
+  group_by(EF_ID) %>% 
+  summarise(n_households = n_distinct(HH_ID)) %>% 
+  filter(n_households != 1)
 
-You may notice that there are some differences with Cara Brown's original table of means. This is due to the fact that the institutional background in Canada has significantly changed since 1998. This has negatively affected the possibility to capture the sample which Brown captures. The main difference is that, back when Cara Brown wrote her paper, marriage for -
+econ_families
+```
+
+The same for census families:
+
+```{r econ-families}
+
+census_families <-
+  hierarchical_data %>% 
+  group_by(CF_ID) %>% 
+  summarise(n_households = n_distinct(HH_ID)) %>% 
+  filter(n_households != 1)
+
+census_families
+```
+
+# Joining my household-level data to the personal-level data
+
+I know join my household data to the person data by using an inner join, as follows. I do an inner join so that I only get the households which I considered back in my household level to be "eligible" for potentially knowing if there are homosexual or heterosexual couples living in there. 
+
+```{r table}
+
+df <-
+  df %>% 
+  inner_join(households, by = 'HH_ID')
+
+df %>% select(PP_ID, hmsxl, income, sex)
+
+```
+
+Thus, this table has a binary indicator for presumed homosexuality, as well as their income and other variables of interest.
+
+
+## Building the table
+
+I now build my table. I just need to apply some value labels so that it looks nicer.
+
+```{r}
+
+# Applying value lables and/or cleaning the data a little bit.
+
+df <-
+  df %>% 
+  mutate(
+  agegrp = case_when(
+    agegrp %in% c(9,10) ~ '45 to 54',
+    agegrp == 11 ~ '55 to 64'
+  ),
+  sex = case_when(
+    sex == 1 ~ 'Female',
+    sex == 2 ~ 'Male'
+  ),
+  MaritalStatus = case_when(
+    MarStH == 2 ~ 'Married',
+    MarStH == 1 ~ 'Single',
+    MarStH == 4 ~ 'Separated or Widowed'
+  ))  %>% 
+  rename(Orientation = 'hmsxl')
+
+# Building a table
+
+# In Markdown output
+
+datasummary(income * Orientation * MaritalStatus ~ Mean*sex*agegrp, 
+            data = df,
+            output = 'markdown')
+
+
+```
+
+
