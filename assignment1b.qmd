@@ -111,7 +111,9 @@ df <-
 
 households <-
   df %>% 
-  filter(agegrp %in% c(9,10,11)) %>% 
+  filter(agegrp %in% c(9,10,11),
+          fptwk == 1,
+         wkswrk == 6,) %>% 
   group_by(HH_ID) %>% 
   summarise(non_rel = sum(non_rel),
             people = n(),
@@ -133,6 +135,7 @@ Below, I will create the `hmsxl` indicator at the household level, and later lef
 
 households <-
   households %>% 
+  filter(people == 2) %>% 
   mutate(hmsxl = ifelse(non_rel >= 1 & people > sexes, 'Homosexual','Heterosexual')) %>% 
   select(HH_ID, hmsxl)
 

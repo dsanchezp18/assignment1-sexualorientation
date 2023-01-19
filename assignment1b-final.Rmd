@@ -7,15 +7,38 @@ output: pdf_document
 
 # General comments
 
-Cara Brown's 1998 paper *Sexual Orientation and Labor Economics* published at *Feminist Economics* looks at the wage differential between heterosexual and homosexual Canadians. In this replication, I attempt to capture the sample that she did by looking at 2016 Hierarchical Census Data. 
+Cara Brown's 1998 paper *Sexual Orientation and Labor Economics* published at *Feminist Economics* looks at the wage differential between heterosexual and homosexual Canadians. In this replication, I attempt to capture the sample that she did by looking at 2016 Hierarchical Census Data. The table which completely attempts to replicate Cara Brown's is the following one.
 
+|Orientation  |Marital Status        | Female / 45 to 54| Female / 55 to 64| Male / 45 to 54| Male / 55 to 64|
+|:------------|:--------------------|-----------------:|-----------------:|---------------:|---------------:|
+|Heterosexual |Married              |          64174.51|          60259.78|        86543.60|        81978.36|
+|             |Separated or Widowed |          54393.82|          46941.19|        55600.00|        62420.02|
+|             |Single               |          44698.13|          55798.07|        48805.56|        35599.97|
+|Homosexual   |                     |          62139.39|          63564.50|        36897.44|        41275.86|
+
+
+You will note that this table shows similar results to Cara Brown's as (1) in general male heterosexuals make more than anyone else, homosexual men earn less than heterosexual women, and straight women make less than homosexual women (in almost all cases, at least). However, there are multiple complications which arise because of different institutional contexts in Canada between 1998 and 2016. First of all, marriage for same-sex couples was legalized in the early 2000s, which means that it is not correct to only consider singles for potentially being homosexual. Second, we do not have last names in our dataset, which means that it is very difficult to leave out those who are not family. Further, I am restricted to households where only 2 people live (after filtering for the age groups I'm interested in) since I cannot know to "pair" people if they are not 
+
+I created a table that better shows what possibly could represent a sample that shows presumed homosexuals. First, I do not leave out anyone based on their marital status, as it communicates very little regarding presumed sexual orientation. I sadly cannot control for potential fraternal relationships, since I do not have the last name or a variable which tells me who is related to whom, so I have to leave that bias inside my table. Finally, I consider a couple more age groups to have a better informed perspective about all this. I also consider the common law marital status, which now does exist and most likely holds a big number of presumed homosexuals, as marriage might still be prejudiced against same sex couples.
+
+|Orientation  |Marital Status        | Female / 35 to 44| Female / 45 to 54| Female / 55 to 64| Male / 35 to 44| Male / 45 to 54| Male / 55 to 64|
+|:------------|:--------------------|-----------------:|-----------------:|-----------------:|---------------:|---------------:|---------------:|
+|Het. |Married              |          64600.42|          64383.06|          60326.58|        86029.47|        86590.01|        82348.51|
+|             |Separated or Widowed |          50551.29|          51484.72|          45484.38|        53926.83|        70554.81|        73057.94|
+|             |Single               |          46124.30|          46537.06|          58251.85|        54263.74|        53783.13|        42548.35|
+|Hom.   |Married              |          54800.00|          64138.89|          68091.58|        58391.91|        70080.00|        60583.33|
+|             |Separated or Widowed |          60120.00|          55750.00|          45000.00|        49750.00|        55260.87|        47300.00|
+|             |Single               |          52333.33|          59171.80|          60933.73|        57729.94|        48304.19|        39409.09|
+
+ 
 Below, I include my code which creates the tables that I have included above.
+
 
 # Preliminaries
 
 Here I load my libraries and the dataset.
 
-```{r, setup}
+```{r, setup, message = F}
 
 # Set my default code chunk options
 knitr::opts_chunk$set(
@@ -109,7 +132,7 @@ econ_families
 
 The same for census families:
 
-```{r econ-families}
+```{r census-families}
 
 census_families <-
   hierarchical_data %>% 
@@ -171,7 +194,93 @@ datasummary(income * Orientation * MaritalStatus ~ Mean*sex*agegrp,
             data = df,
             output = 'markdown')
 
+# In excel output
+
+  datasummary(income * Orientation * MaritalStatus ~ Mean*sex*agegrp, 
+            data = df,
+            output = 'table1.xlsx')
+
 
 ```
 
+# My other table:
+
+I now do my other table of means, by considering the other conditions that I talked about in the commentary (first section) of this document. 
+
+```{r}
+
+# Cleaning the data with the new conditions
+
+df1<-
+  hierarchical_data %>% 
+  filter(agegrp %in% c(7,8,9,10,11),
+         !(empin %in% c(88888888, 99999999)),
+         sex != 8,
+         !(MarStH %in% c(8)),
+         fptwk == 1,
+         wkswrk == 6,
+         ) %>% 
+  rename(income = 'empin') %>% 
+  mutate(single = ifelse(MarStH == 1,1,0))
+
+# Grouping at the household level
+
+households1<-
+  df1 %>% 
+  group_by(HH_ID) %>% 
+  summarise(people = n(),
+            sexes = n_distinct(sex),
+            singles = sum(single),
+            families_econ = n_distinct(EF_ID),
+            families_census= n_distinct(CF_ID)) %>% 
+  filter(people == 2) %>% 
+  mutate(
+    hmsxl = case_when(
+      people > sexes ~ 'Homosexual',
+      TRUE ~ 'Heterosexual'
+  ))
+
+# Back to individual level
+
+df1 <-
+  df1 %>% 
+  inner_join(households1, by = 'HH_ID')
+
+# Labels for my table
+
+df1 <-
+  df1 %>% 
+  mutate(
+  agegrp = case_when(
+    agegrp %in% c(9,10) ~ '45 to 54',
+    agegrp %in% c(7,8) ~ '35 to 44',
+    agegrp == 11 ~ '55 to 64'
+  ),
+  sex = case_when(
+    sex == 1 ~ 'Female',
+    sex == 2 ~ 'Male'
+  ),
+  MaritalStatus = case_when(
+    MarStH == 2 ~ 'Married',
+    MarStH == 1 ~ 'Single',
+    MarStH == 4 ~ 'Separated or Widowed'
+  ))  %>% 
+  rename(Orientation = 'hmsxl')
+
+# Building a table
+
+# In Markdown output
+
+datasummary(income * Orientation * MaritalStatus ~ Mean*sex*agegrp, 
+            data = df1,
+            output = 'markdown')
+
+
+datasummary(income * Orientation * MaritalStatus ~ Mean*sex*agegrp, 
+            data = df1,
+            output = 'table2.xlsx')
+
+
+
+```
 
