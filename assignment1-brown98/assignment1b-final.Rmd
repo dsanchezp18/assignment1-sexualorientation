@@ -279,8 +279,5 @@ datasummary(income * Orientation * MaritalStatus ~ Mean*sex*agegrp,
 datasummary(income * Orientation * MaritalStatus ~ Mean*sex*agegrp, 
             data = df1,
             output = 'table2.xlsx')
-
-
-
 ```
 
