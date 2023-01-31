@@ -48,12 +48,16 @@ df_pre <-
       hdgree %in% c(88,99) ~ as.double(NA),
       TRUE~ as.double(hdgree)
       ),
-    education = as.factor(education) %>% relevel(2)
+    education = as.factor(education) %>% relevel(2),
+    aboid = aboid * 100
   )
+
 
 # Create the "race" variables which includes all categories of indians
 
 # First remove the NAs
+
+# Then do all of my categorizations
 
 df <- 
   df_pre %>%
@@ -67,7 +71,23 @@ df <-
     )
   )
 
+# Now redo, with labels
 
+df <-
+  df %>% 
+  mutate(race = 
+    case_when(
+      race == 999 ~ 'Registered Indian',
+      race == 100 ~ 'North American Indian',
+      race == 200 ~ 'Métis',
+      race == 300  ~ 'Inuit',
+      race == 400  ~ 'Multiple',
+      race == 500  ~ 'Other aboriginal response',
+      race == 600 ~ 'Ancestry',
+      TRUE ~ as.character(ethder),
+    ),
+    race = as.factor(race) %>% relevel('4')
+  )
 
 # Reducing the sample -------------------------------------------------------------------------------------
 
@@ -82,6 +102,8 @@ df <-
 
 # We always do different samples, one for women and another for men
 
+# Whole of Canada
+
 canada_men <-
   df %>% 
   filter(Sex == 2)
@@ -90,18 +112,163 @@ canada_women <-
   df %>% 
   filter(Sex == 1)
 
-# Must also do different samples 
+# Montreal
 
-# For wage earnings regressions, look only at cow == 1
+montreal_men <-
+  df %>% 
+  filter(cma == 462,
+         Sex == 1)
+
+montreal_women <-
+  df %>% 
+  filter(cma == 462,
+         Sex == 2)
+
+# Toronto
+
+toronto_men <-
+  df %>% 
+  filter(cma == 535,
+         Sex == 1)
+
+toronto_women <-
+  df %>% 
+  filter(cma == 535,
+         Sex == 2)
+
+# Winnipeg
+
+winnipeg_men <-
+  df %>% 
+  filter(cma == 535,
+         Sex == 1)
+
+winnipeg_women <-
+  df %>% 
+  filter(cma == 602,
+         Sex == 2)
+
+# Calgary
+
+calgary_men <-
+  df %>% 
+  filter(cma == 825,
+         Sex == 1)
+
+calgary_women <-
+  df %>% 
+  filter(cma == 825,
+         Sex == 2)
+
+# Edmonton
+
+edmonton_men <-
+  df %>% 
+  filter(cma == 835,
+         Sex == 1)
+
+edmonton_women <-
+  df %>% 
+  filter(cma == 835,
+         Sex == 2)
+
+# Vancouver
+
+vancouver_men <-
+  df %>% 
+  filter(cma == 933,
+         Sex == 1)
+
+vancouver_women <-
+  df %>% 
+  filter(cma == 933,
+         Sex == 2)
+
+# Regressions ---------------------------------------------------------------------------------------------
+
+# Canada
 
 canada_men_reg <-
-  rq(log(income) ~ as.character(race) + marstat + age + hhsize + 
-     cma + education + lang, 
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
      data = canada_men,
      tau = c(0.2,0.5,0.8,0.9))
 
-canada_men_reglm <-
-  lm(log(income) ~ as.character(race) + marstat + age + hhsize + 
-       cma + education + lang, 
-     data = canada_men)
+canada_women_reg <-
+   rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+       data = canada_women,
+      tau = c(0.2,0.5,0.8,0.9))
+
+# Montreal
+
+montreal_men_reg <-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = montreal_men,
+     tau = c(0.2,0.5,0.8,0.9))
+
+montreal_women_reg <-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = montreal_women,
+     tau = c(0.2,0.5,0.8,0.9))
+
+# Toronto
+
+toronto_men_reg <-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = toronto_men,
+     tau = c(0.2,0.5,0.8,0.9))
+
+toronto_women_reg<-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = toronto_women,
+     tau = c(0.2,0.5,0.8,0.9))
+
+# Winnipeg
+
+winnipeg_men_reg <-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = winnipeg_men,
+     tau = c(0.2,0.5,0.8,0.9))
+
+winnipeg_women_reg<-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = winnipeg_women,
+     tau = c(0.2,0.5,0.8,0.9))
+
+# Calgary
+
+calgary_men_reg <-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = calgary_men,
+     tau = c(0.2,0.5,0.8,0.9))
+
+calgary_women_reg<-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = calgary_women,
+     tau = c(0.2,0.5,0.8,0.9))
+
+# Edmonton
+
+edmonton_men_reg <-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = edmonton_women,
+     tau = c(0.2,0.5,0.8,0.9))
+
+edmonton_women_reg<-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = edmonton_women,
+     tau = c(0.2,0.5,0.8,0.9))
+
+# Vancouver
+
+vancouver_men_reg <-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = vancouver_women,
+     tau = c(0.2,0.5,0.8,0.9))
+
+vancouver_women_reg<-
+  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+     data = vancouver_women,
+     tau = c(0.2,0.5,0.8,0.9))
+
+
 
