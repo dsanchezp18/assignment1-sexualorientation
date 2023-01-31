@@ -105,7 +105,3 @@ canada_men_reglm <-
        cma + education + lang, 
      data = canada_men)
 
-summary(canada_men_reglm)
-
-canada_men_reg %>% summary()
-canada_men_reg$coefficients -> coefs
