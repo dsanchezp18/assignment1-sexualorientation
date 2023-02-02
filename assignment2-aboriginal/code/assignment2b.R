@@ -8,6 +8,7 @@ library(tidyverse)
 library(haven)
 library(quantreg)
 library(modelsummary)
+library(rio)
 
 # Load data (2016 Individual Microdata for the Canadian census)
 
@@ -18,7 +19,7 @@ census_raw <-
 
 # I put NAs for all missing or not available values
 
-# I also relevel the age, marital_statusd- factor to have the reference group that I want 
+# I also relevel the age, marital_status factors to have the reference group that I want 
 
 df_pre <-
   census_raw %>% 
@@ -61,7 +62,8 @@ df_pre <-
 
 df <- 
   df_pre %>%
-  filter(ethder != 88) %>% 
+  filter(ethder != 88,
+         income >= 100) %>% 
   mutate(
     race = case_when(
       ethder != 1 ~ ethder,
@@ -78,11 +80,11 @@ df <-
   mutate(race = 
     case_when(
       race == 999 ~ 'Registered Indian',
-      race == 100 ~ 'North American Indian',
+      race == 100 ~ 'First Nations',
       race == 200 ~ 'Métis',
       race == 300  ~ 'Inuit',
-      race == 400  ~ 'Multiple',
-      race == 500  ~ 'Other aboriginal response',
+      race == 400  ~ 'First Nations',
+      race == 500  ~ 'First Nations',
       race == 600 ~ 'Ancestry',
       TRUE ~ as.character(ethder),
     ),
@@ -140,7 +142,7 @@ toronto_women <-
 
 winnipeg_men <-
   df %>% 
-  filter(cma == 535,
+  filter(cma == 602,
          Sex == 1)
 
 winnipeg_women <-
@@ -189,86 +191,109 @@ vancouver_women <-
 # Canada
 
 canada_men_reg <-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = canada_men,
      tau = c(0.2,0.5,0.8,0.9))
 
 canada_women_reg <-
-   rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+   rq(log(income) ~ race + marstat + age + size + education + lang, 
        data = canada_women,
       tau = c(0.2,0.5,0.8,0.9))
 
 # Montreal
 
 montreal_men_reg <-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = montreal_men,
      tau = c(0.2,0.5,0.8,0.9))
 
 montreal_women_reg <-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = montreal_women,
      tau = c(0.2,0.5,0.8,0.9))
 
 # Toronto
 
 toronto_men_reg <-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = toronto_men,
      tau = c(0.2,0.5,0.8,0.9))
 
 toronto_women_reg<-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = toronto_women,
      tau = c(0.2,0.5,0.8,0.9))
 
 # Winnipeg
 
 winnipeg_men_reg <-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = winnipeg_men,
      tau = c(0.2,0.5,0.8,0.9))
 
 winnipeg_women_reg<-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = winnipeg_women,
      tau = c(0.2,0.5,0.8,0.9))
 
 # Calgary
 
 calgary_men_reg <-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = calgary_men,
      tau = c(0.2,0.5,0.8,0.9))
 
 calgary_women_reg<-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = calgary_women,
      tau = c(0.2,0.5,0.8,0.9))
 
 # Edmonton
 
 edmonton_men_reg <-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
-     data = edmonton_women,
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
+     data = edmonton_men,
      tau = c(0.2,0.5,0.8,0.9))
 
 edmonton_women_reg<-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = edmonton_women,
      tau = c(0.2,0.5,0.8,0.9))
 
 # Vancouver
 
 vancouver_men_reg <-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
-     data = vancouver_women,
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
+     data = vancouver_men,
      tau = c(0.2,0.5,0.8,0.9))
 
 vancouver_women_reg<-
-  rq(log(income) ~ race + marstat + age + hhsize + education + lang, 
+  rq(log(income) ~ race + marstat + age + size + education + lang, 
      data = vancouver_women,
      tau = c(0.2,0.5,0.8,0.9))
 
+# Export --------------------------------------------------------------------------------------------------
+
+models <-
+  list(
+    canada_men_reg$coefficients,
+    canada_women_reg$coefficients,
+    calgary_men_reg$coefficients,
+    calgary_women_reg$coefficients,
+    edmonton_men_reg$coefficients,
+    edmonton_women_reg$coefficients,
+    montreal_men_reg$coefficients,
+    montreal_women_reg$coefficients,
+    toronto_men_reg$coefficients,
+    toronto_women_reg$coefficients,
+    vancouver_men_reg$coefficients,
+    vancouver_women_reg$coefficients,
+    winnipeg_men_reg$coefficients,
+    winnipeg_women_reg$coefficients
+  )
+
+file <- 'assignment2-aboriginal/final-output.xlsx'
+
+export(models,file, row.names = T)
 
 
