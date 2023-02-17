@@ -1,4 +1,6 @@
-# Assignment 2b: Replicating Pendakur & Pendakur (2011)
+################### Assignment 2b: Replicating Pendakur & Pendakur #######################
+# ECON836 Applied Econometrics
+# Daniel Sanchez
 
 # Preliminaries -------------------------------------------------------------------------------------------
 
