@@ -177,6 +177,3 @@ matched_dataset %>%
       format = 'latex',
       digits = 0,
       booktabs = T)
-
-  
-
