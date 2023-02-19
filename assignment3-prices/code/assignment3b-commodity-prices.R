@@ -1,11 +1,3 @@
-#' ---
-#' title: "Crop Analysis Q3 2013"
-#' author: "John Smith"
-#' date: "May 3rd, 2014"
-#' ---
-
-
-
 ####################  Assignment 3b: Finding and matching data for Demand Analysis
 # ECON836 Applied Econometrics
 # Daniel Sanchez
