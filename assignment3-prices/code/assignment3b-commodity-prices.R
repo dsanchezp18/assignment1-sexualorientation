@@ -129,8 +129,19 @@ cpi_to_match <-
 
 scs_to_match <-
   scs %>% 
-  select(household, year, size, province, rooms, type, tenure, age_reference, sex_reference,
-         Food, Shelter, Transportation, Clothing )
+  select(household, 
+         year, 
+         size, 
+         province,
+         rooms, 
+         type, 
+         tenure, 
+         age_reference, 
+         sex_reference,
+         Food, 
+         Shelter, 
+         Transportation, 
+         Clothing )
 
 # Transform wide to long (which makes the dataset at the household-expenditure level, another type of panel)
 
