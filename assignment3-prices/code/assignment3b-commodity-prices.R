@@ -164,6 +164,8 @@ matched_dataset <-
 
 # Exporting -----------------------------------------------------------------------------------------------
 
+# To LaTeX
+
 scs_grouped %>%
   filter(province == 59) %>%
   kbl(caption = 'Mean Household Expenditure for British Columbia (rounded)',
@@ -177,3 +179,8 @@ matched_dataset %>%
       format = 'latex',
       digits = 0,
       booktabs = T)
+
+# To .RData
+
+save(matched_dataset, file = 'assignment4-demandestimation/data/df.RData')
+
