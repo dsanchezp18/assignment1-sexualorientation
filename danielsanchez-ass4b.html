@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>Assignment 4b: SUR-Demand</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.6.0/build/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/combine/gh/highlightjs/cdn-release@11.6.0/build/highlight.min.js,npm/@xiee/utils/js/load-highlight.js" async></script>
+
+<!-- MathJax scripts -->
+<script src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML" async>
+</script>
+
+<style type="text/css">
+body, td {
+  font-family: sans-serif;
+  background-color: white;
+  font-size: 13px;
+}
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 1.5;
+}
+tt, code, pre {
+  font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+a:visited { color: #80007f; }
+pre, img { max-width: 100%; }
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+code[class] { background-color: #F8F8F8; }
+code.language-undefined { background-color: inherit; }
+table {
+  margin: auto;
+  border-top: 1px solid #666;
+  border-bottom: 1px solid #666;
+}
+table thead th { border-bottom: 1px solid #ddd; }
+th, td { padding: 5px; }
+thead, tfoot, tr:nth-child(even) { background: #eee; }
+blockquote {
+  color:#666;
+  margin:0;
+  padding-left: 1em;
+  border-left: 0.5em #eee solid;
+}
+hr { border: 1px #ddd dashed; }
+
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    filter:none !important;
+  }
+  body {
+    font-size: 12pt;
+    max-width: 100%;
+  }
+  a, a:visited { text-decoration: underline; }
+  hr {
+    visibility: hidden;
+    page-break-before: always;
+  }
+  pre, blockquote {
+    padding-right: 1em;
+    page-break-inside: avoid;
+  }
+  tr, img { page-break-inside: avoid; }
+  img { max-width: 100% !important; }
+  @page :left { margin: 15mm 20mm 15mm 10mm; }
+  @page :right { margin: 15mm 10mm 15mm 20mm; }
+  p, h2, h3 { orphans: 3; widows: 3; }
+  h2, h3 { page-break-after: avoid; }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<p>This document walks through the results of my code. Please see the code in the <code>assignment4b.R</code> file attached to the Canvas submission, or look at the last few pages of this document for my code.</p>
+<h1>Method 1: An Ideal Demand System</h1>
+<p>I present the results of the AIDS estimation by seemingly unrelated regression below:</p>
+<h1>Method 2: Crawford Paper</h1>
+<p>I estimate the COLI approach from the 2022 Crawford paper. Note that this does not imply estimating any kind of regression, so I only present the average COL increase in % terms by province across all years. Please review my code if you need to know that I ran the actual model. I followed the given formula below:</p>
+<p>$$ 1 + \pi = \dfrac{q’\cdot p’}{q \cdot p}$$
+where variables with a prime are the ones estimated after the tax increase. The overall average across the years is 27.9699273%.</p>
+<pre><code class="language-r">kable(average_col_province,
+      format = 'latex',
+      booktabs = TRUE,
+      longtable = T)
+</code></pre>
+<p>\begin{longtable}{lr}
+\toprule
+province &amp; MeanCol\
+\midrule
+Newfoundland and Labrador &amp; 28.52081\
+Prince Edward Island &amp; 30.03678\
+Nova Scotia &amp; 28.26923\
+New Brunswick &amp; 26.46034\
+Quebec &amp; 26.79842\
+\addlinespace
+Ontario &amp; 26.18246\
+Manitoba &amp; 26.31703\
+Saskatchewan &amp; 29.81776\
+Alberta &amp; 37.44424\
+British Columbia &amp; 22.88087\
+\bottomrule
+\end{longtable}</p>
+
+
+<script src="https://cdn.jsdelivr.net/combine/npm/@xiee/utils/js/center-img.min.js" async></script>
+</body>
+
+</html>
