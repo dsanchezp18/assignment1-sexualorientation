@@ -39,6 +39,7 @@ Below, I include my code which creates the tables that I have included above.
 Here I load my libraries and the dataset.
 
 ```{r, setup, message = F}
+
 # Set my default code chunk options
 knitr::opts_chunk$set(
   echo = T, 
@@ -59,6 +60,7 @@ hierarchical_data <-
   read_dta('data/Census_2016_Hierarchial.dta')
 
 ```
+
 
 # Homosexual Indicator, Cara Brown approach
 
