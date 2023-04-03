@@ -13,6 +13,7 @@ library(haven)
 library(lubridate)
 library(fixest)
 library(oaxaca)
+library(quantreg)
 
 # Unzip files and load the data
 
@@ -60,7 +61,7 @@ df <-
          type = 'rama1') %>% 
   mutate(sex = if_else(p02 == 1, 'Male', 'Female') %>% as.factor() %>% relevel(ref = 'Male'),
          income = na_if(ingrl, 999999) %>% zap_labels() %>% unname(),
-         age = na_if(p03, 99),
+         age = na_if(p03, 99) %>% zap_labels() %>% unname(),
          mar_stat = case_when(
            p06 == 1 ~ 'Married',
            p06 == 2 ~ 'Separated',
@@ -81,7 +82,7 @@ df <-
          hh_head = if_else(p04 == 1, 'Head', 'Not Head') %>% as.factor() %>% relevel(ref = 'Not Head'),
          urban = if_else(area == 1, 'Urban', 'Rural') %>% as.factor() %>% relevel(ref = 'Rural'),
          public = if_else(p42 == 1, 'Public', 'Not Public') %>% as.factor() %>% relevel(ref =  'Not Public'),
-         exp = na_if(p45, 99),
+         exp = na_if(p45, 99) %>% zap_labels() %>% unname(),
          schooling = case_when(
            nnivins == 1 ~ 'None',
            nnivins == 2 ~ 'Alphabetization Center',
@@ -89,16 +90,19 @@ df <-
            nnivins == 4 ~ 'Secondary',
            nnivins == 5  ~ 'Higher',
          ) %>% as.factor() %>% relevel(ref = 'None'),
-         sex_dummy = as.logical(sex == 'Female')) %>%
+         sex_dummy = as.logical(sex == 'Female'),
+         hours = if_else(pp02g == 999, NA, pp02g*4)) %>%
   filter(income > 0,
-         employed == 1)
+         employed == 1,
+         hours > 0) %>% 
+  mutate(income_h = income/hours)
 
 # Run models --------------------------------------------------------------
 
 # 2011, everyone
 
 m11_all <- lm(
-  log(income) ~ sex + age + schooling + mar_stat + race + urban + public + exp ,
+  log(income) ~ sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
   data = df %>% filter(year == 2011),
   weights = fexp
 )
@@ -108,7 +112,7 @@ summary(m11_all)
 # 2011, women
 
 m11_women <- lm(
-  log(income) ~ age + schooling + mar_stat + race + urban + public + exp ,
+  log(income) ~ age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
   data = df %>% filter(year == 2011, sex == 'Female'),
   weights = fexp
 )
@@ -118,7 +122,7 @@ summary(m11_women)
 # 2011, men
 
 m11_men <- lm(
-  log(income) ~ age + schooling + mar_stat + race + urban + public + exp ,
+  log(income) ~ age + schooling + mar_stat + race + urban + public + exp + I(exp^2) ,
   data = df %>% filter(year == 2011, sex == 'Male'),
   weights = fexp
 )
@@ -129,7 +133,7 @@ summary(m11_men)
 # 2012, everyone
 
 m12_all <- lm(
-  log(income) ~ sex + age + schooling + mar_stat + race + urban + public + exp,
+  log(income) ~ sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
   data = df %>% filter(year == 2012),
   weights = fexp
 )
@@ -139,7 +143,7 @@ summary(m12_all)
 # 2012, women
 
 m11_women <- lm(
-  log(income) ~ age + schooling + mar_stat + race + urban + public + exp ,
+  log(income) ~ age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
   data = df %>% filter(year == 2012, sex == 'Female'),
   weights = fexp
 )
@@ -149,7 +153,7 @@ summary(m11_women)
 # 2012, men
 
 m11_men <- lm(
-  log(income) ~ age + schooling + mar_stat + race + urban + public + exp ,
+  log(income) ~ age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
   data = df %>% filter(year == 2012, sex == 'Male'),
   weights = fexp
 )
@@ -159,7 +163,7 @@ summary(m11_men)
 # Both years for all
 
 m_all <- lm(
-  log(income) ~ year + sex + age + schooling + mar_stat + race + urban + public + exp ,
+  log(income) ~ year + sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
   data = df,
   weights = fexp
 )
@@ -169,40 +173,136 @@ summary(m_all)
 # Interact year with sex to see the change in the gender differential
 
 m_all_int <- lm(
-  log(income) ~ year*sex + age + schooling + mar_stat + race + urban + public + exp ,
+  log(income) ~ year*sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
   data = df,
   weights = fexp
 )
 
 summary(m_all_int)
 
+# Regressions with earnings per hour --------------------------------------
+
+# 2011, everyone
+
+m11_allh <- lm(
+  log(income_h) ~ sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df %>% filter(year == 2011),
+  weights = fexp
+)
+
+summary(m11_all)
+
+# 2011, women
+
+m11_womenh <- lm(
+  log(income_h) ~ age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df %>% filter(year == 2011, sex == 'Female'),
+  weights = fexp
+)
+
+summary(m11_women)
+
+# 2011, men
+
+m11_menh <- lm(
+  log(income_h) ~ age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df %>% filter(year == 2011, sex == 'Male'),
+  weights = fexp
+)
+
+summary(m11_men)
+
+# 2012, everyone
+
+m12_allh <- lm(
+  log(income_h) ~ sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df %>% filter(year == 2012),
+  weights = fexp
+)
+
+summary(m12_all)
+
+# 2012, women
+
+m11_womenh <- lm(
+  log(income_h) ~ age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df %>% filter(year == 2012, sex == 'Female'),
+  weights = fexp
+)
+
+summary(m11_women)
+
+# 2012, men
+
+m11_menh <- lm(
+  log(income_h) ~ age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df %>% filter(year == 2012, sex == 'Male'),
+  weights = fexp
+)
+
+summary(m11_men)
+
+# Both years for all
+
+m_allh <- lm(
+  log(income_h) ~ year + sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df,
+  weights = fexp
+)
+
+summary(m_allh)
+
+# Both years for men
+
+m_allh_men <- lm(
+  log(income_h) ~ year + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df %>% filter(sex == 'Male'),
+  weights = fexp
+)
+
+summary(m_allh_men)
+
+# Interact year with sex to see the change in the gender differential
+
+m_all_inth <- lm(
+  log(income_h) ~ year*sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df,
+  weights = fexp
+)
+
+summary(m_all_int)
+
+# Quantile Regressions ----------------------------------------------------
+
+quant_allh <- rq(
+  log(income_h) ~ year*sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df,
+  weights = fexp,
+  tau = c(0.1,0.9)
+)
+
+quant_all <-rq(
+  log(income) ~ year*sex + age + schooling + mar_stat + race + urban + public + exp + I(exp^2),
+  data = df,
+  weights = fexp,
+  tau = c(0.1,0.9)
+)
+
 # Oaxaca-Blinder Decompositions -------------------------------------------
 
-# For 2011
-
-oax_2011 <-
-  oaxaca(log(income) ~ age + schooling + mar_stat + race + urban + public + exp | sex_dummy,
-       df %>% filter(year == 2011),
-       R = NULL)
-
-plot(oax_2011, decomposition = 'twofold', group.weight = 1)
-
-# For 2012
-
-oax_2012 <-
-  oaxaca(log(income) ~ age + schooling + mar_stat + race + urban + public + exp | sex_dummy,
-         df %>% filter(year == 2012),
-         R = NULL)
-
-plot(oax_2012, decomposition = 'twofold', group.weight = 1)
-
-# For both
+# For both years and total income
 
 oax <-
-  oaxaca(log(income) ~ year + age + schooling + mar_stat + race + urban + public + exp | sex_dummy,
+  oaxaca(log(income) ~ year + age + schooling + mar_stat + race + urban + public + exp + I(exp^2) | sex_dummy,
          df)
 
-plot(oax, decomposition = 'twofold', group.weight = 1)
+# For both years with hourly income
 
+oax_h <-
+  oaxaca(log(income_h) ~ year + age + schooling + mar_stat + race + urban + public + exp + I(exp^2) | sex_dummy,
+         df)
 
+# Finish, exporting everything to an .RData file to later load to my Quarto document.
+
+save(list = ls(), file = 'assignment5-undirected/report/environment.RData')
 
