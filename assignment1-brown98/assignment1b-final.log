@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2021.6.5)  18 JAN 2023 16:12
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2021.6.5)  3 JUL 2023 23:17
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -669,23 +669,23 @@ Overfull \vbox (0.81296pt too high) detected at line 308
  []
 
 [2] [3] [4]
-Overfull \hbox (1.84474pt too wide) in paragraph at lines 506--507
-[]\T1/lmr/m/n/10 (-20) Orientation  
+Overfull \hbox (1.28636pt too wide) in paragraph at lines 506--507
+ []\T1/lmr/m/n/10 (-20) Orientation
  []
 
 
-Overfull \hbox (4.41078pt too wide) in paragraph at lines 520--520
+Overfull \hbox (2.49896pt too wide) in paragraph at lines 520--520
 []|\T1/lmr/m/n/10 (-20) income|  
  []
 
 
-Overfull \hbox (7.62157pt too wide) in paragraph at lines 520--520
-[]|\T1/lmr/m/n/10 (-20) Heterosexual|  
+Overfull \hbox (7.06319pt too wide) in paragraph at lines 520--520
+ []|\T1/lmr/m/n/10 (-20) Heterosexual|
  []
 
 
-Overfull \hbox (4.32709pt too wide) in paragraph at lines 524--524
-[]|\T1/lmr/m/n/10 (-20) Homosexual|  
+Overfull \hbox (3.7687pt too wide) in paragraph at lines 524--524
+ []|\T1/lmr/m/n/10 (-20) Homosexual|
  []
 
 [5]
@@ -697,37 +697,37 @@ Underfull \vbox (badness 10000) detected at line 614
  []
 
 [6]
-Overfull \hbox (15.32115pt too wide) in paragraph at lines 629--630
-[]\T1/lmr/m/n/10 (-20) Orientation  
+Overfull \hbox (14.8706pt too wide) in paragraph at lines 629--630
+ []\T1/lmr/m/n/10 (-20) Orientation
  []
 
 
-Overfull \hbox (4.25119pt too wide) in paragraph at lines 631--632
-[]\T1/lmr/m/n/10 (-20) MaritalStatus  
+Overfull \hbox (5.07243pt too wide) in paragraph at lines 631--632
+ []\T1/lmr/m/n/10 (-20) MaritalStatus
  []
 
 
-Overfull \hbox (11.63167pt too wide) in paragraph at lines 647--647
+Overfull \hbox (10.28575pt too wide) in paragraph at lines 647--647
 []|\T1/lmr/m/n/10 (-20) income|  
  []
 
 
-Overfull \hbox (21.09798pt too wide) in paragraph at lines 647--647
-[]|\T1/lmr/m/n/10 (-20) Heterosexual|  
+Overfull \hbox (20.64743pt too wide) in paragraph at lines 647--647
+ []|\T1/lmr/m/n/10 (-20) Heterosexual|
  []
 
 
-Overfull \hbox (17.8035pt too wide) in paragraph at lines 653--653
-[]|\T1/lmr/m/n/10 (-20) Homosexual|  
+Overfull \hbox (17.35295pt too wide) in paragraph at lines 653--653
+ []|\T1/lmr/m/n/10 (-20) Homosexual|
  []
 
 [7] (./assignment1b-final.aux) ) 
 Here is how much of TeX's memory you used:
- 14823 strings out of 478557
- 219240 string characters out of 5854912
- 610560 words of memory out of 5000000
+ 14821 strings out of 478557
+ 219218 string characters out of 5854912
+ 610554 words of memory out of 5000000
  32355 multiletter control sequences out of 15000+600000
- 445678 words of font info for 96 fonts, out of 8000000 for 9000
+ 445595 words of font info for 95 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  74i,8n,80p,756b,448s stack positions out of 5000i,500n,10000p,200000b,80000s
 {c:/texlive/2021/texmf-dist/fonts/enc/dvips/lm/
@@ -739,7 +739,7 @@ xlive/2021/texmf-dist/fonts/type1/public/lm/lmr17.pfb><c:/texlive/2021/texmf-di
 st/fonts/type1/public/lm/lmri10.pfb><c:/texlive/2021/texmf-dist/fonts/type1/pub
 lic/lm/lmtt10.pfb><c:/texlive/2021/texmf-dist/fonts/type1/public/lm/lmtti10.pfb
 >
-Output written on assignment1b-final.pdf (7 pages, 219754 bytes).
+Output written on assignment1b-final.pdf (7 pages, 219723 bytes).
 PDF statistics:
  135 PDF objects out of 1000 (max. 8388607)
  107 compressed objects within 2 object streams
