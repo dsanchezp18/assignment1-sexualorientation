@@ -1,0 +1,197 @@
+---
+title: "Assignment 5 Undirected: Part 2"
+author: "Daniel Sánchez Pazmiño"
+format: 
+  pdf:
+    include-in-header: header.tex
+bibliography: refs.bib
+knitr:
+  opts_chunk: 
+    echo: false
+    message: false
+    warning: false
+    error: false
+---
+
+This document presents my code and analysis for my replication and commenting of @linthon2022.
+
+# Preliminaries
+
+I load my libraries and then my data and regressions from the `undirected-part2.R` script that is included within the `.rar` file that I uploaded along with this document.
+
+```{r}
+#| label: setup
+
+# Load libraries
+
+library(tidyverse)
+library(haven)
+library(lubridate)
+library(fixest)
+library(stargazer)
+library(modelsummary)
+library(oaxaca)
+
+# Load my data and the results from the data analysis
+
+load('environment.RData') # All the results from my code, included in my R script.
+
+```
+
+# The paper
+
+@linthon2022 is a paper published in the Mexican Journal of Economics and Finance which estimates the gender wage gap in Ecuador using the employment survey from September 2020. It uses a Oaxaca-Blinder decomposition after estimating Mincer earnings functions.
+
+In this asssignment, I replicate and expand @linthon2022 by estimating the same earnings functions but with 2011 and 2012 data, which is not subject to the pandemic's effects. Further, I want to know if the gender wage differential changed from 2011 to 2012, where there was a significant policy change affecting women only. The policy affected women only in that it increased the number of months that a woman who recently gave birth can enjoy a paid break of two hours a day for breastfeeding. Further, the reform required companies to install "breastfeeding stations" in their offices if the company exceeded an employee number threshold. I would like to investigate if employers reduced base earnings for women to account for these new expenses.
+
+# The data
+
+I use the data from the Ecuadorian analogous to Canada's employment survey (LFS), which is the National Surveyt of Employment, Unemployment & Underemployment (ENEMDU, for its initials in Spanish). I use the microdata available to the public at the Ecuadorian National Institute of Statistics and Censuses' (INEC, for its initials in Spanish) [website](https://www.ecuadorencifras.gob.ec/estadisticas-laborales-febrero-2023-2/). In my code, I unzip the data for 2011 and 2012 (the December survey) from its `.rar` presentation as downloaded from the website and then proceed to use it for my analysis.
+
+I present some descriptive statistics below, as well as counts and percentages for each of the categorical variable I use in the study. 
+```{r}
+#| label: descriptive-stats
+#| results: asis
+
+descriptive <-
+  df %>% 
+  transmute(`Income` = income,
+            `Age` = age,
+            `Year` = year,
+            `Experience` = exp,
+            `Ln Income` = log(Income),
+            `Sex` = sex,
+            `Schooling` = schooling,
+            `Marital Status` = mar_stat,
+            `Race` = race,
+            `Urban/Rural` = urban,
+            `Private/Public Employment` = public
+            )
+
+datasummary(Income + `Ln Income` + Age  + Experience ~ (Mean + Median) * Sex * Year,
+            data = descriptive,
+            output = 'latex',
+            title = 'Descriptive statistics for the continuous variables in the sample',
+            float = 'H')
+```
+```{r}
+#| results: asis
+datasummary(Schooling + `Marital Status` + Race + `Urban/Rural` + `Private/Public Employment`
+            ~ Percent(denom = 'col') * Sex * Year,
+            data = descriptive,
+            output = 'latex',
+            float = 'H',
+            title = 'Percentages (%) for the categorical variables in the sample')
+
+```
+
+# Methods
+
+## Mincer earnings function
+
+The Mincer earnings function develops the natural logarithm of earnings as a function of observable characteristics at the invidual level. I implement such earnings functions based on the common controls and add race, urban/rural and public/private groups to further control for differences. The basic equation is:
+
+\begin{equation}
+ln(Y_i) = \beta_0 + \beta_1Educ_i + \beta_2Exp_i + \beta_3Exp_i^2 + \beta_4X_i + \epsilon_i,
+\end{equation}
+
+where $Y_i$ represents the earnings of individual $i$, $Educ_i$ is the years of education, $Exp_i$ is the years of work experience, $Exp_i^2$ is the squared work experience, and $X_i$ is a vector of other individual characteristics, such as age, gender, and occupation. The $\beta$ coefficients represent the marginal effects of each variable on earnings.
+
+Importantly, I assume experience has diminishing marginal returns to earnings. This is reflected in the quadratic term, which captures the idea that the effect of experience on earnings diminishes as experience increases. I estimate the earnings function using OLS, but later test for sticky floor and glass ceiling effects by using quantile regression at the bottom 10% and at the top 95%. 
+
+## Oaxaca-Blinder decomposition
+
+The Oaxaca-Blinder method is used to decompose differences in economic outcomes between two groups into portions that can be explained by differences in observable characteristics (e.g., education, experience, industry, etc.) and portions that cannot be explained by such differences (e.g., discrimination, unobserved factors).
+
+The method decomposes the difference in means of the outcome variable between two groups (e.g., men and women) into two parts: the part that can be explained by differences in observable characteristics and the part that cannot. The decomposition can be expressed as:
+
+\begin{equation}
+\bar{Y}_1-\bar{Y}_0=\sum_{i=1}^K \beta_i\left(X_{1 i}-X_{0 i}\right)+\sum_{i=1}^K \delta_i \bar{X}_1+u_1-\sum_{i=1}^K \delta_i \bar{X}_0-u_0
+\end{equation}
+
+where $\overline{Y}1$ and $\overline{Y}0$ are the mean values of the outcome variable for the two groups, $X{1i}$ and $X{0i}$ are the mean values of the $i$th characteristic for the two groups, $\beta_i$ is the coefficient for the $i$th characteristic in a regression of the outcome variable on the characteristics for the pooled sample, $\overline{X}_1$ and $\overline{X}_0$ are the mean values of the $i$th characteristic for the two groups, and $u_1$ and $u_0$ are the unexplained portions of the difference in means for the two groups.
+
+The first part of the equation represents the explained portion of the difference in means, which is due to differences in observable characteristics between the two groups. The second part of the equation represents the unexplained portion of the difference in means, which may be due to discrimination, unobserved characteristics, or measurement error.
+
+The Oaxaca-Blinder method estimates the explained and unexplained portions of the difference in means by estimating two separate regression equations for the two groups and comparing the predicted values from each equation. In this paper, I implement the two-way Oaxaca-Blinder filter using the *oaxaca* R package.
+
+# Results
+
+## Estimated earnings functions
+
+Below, I include the results for key earnings functions that I estimated with the above methodology.
+
+```{r}
+#| label: earnings-functions
+#| results: asis
+
+regs <- list(
+  m_all,
+  m_all_int,
+  m_allh,
+  m_all_inth
+)
+
+stars <- c('*'= 0.1, '**' = 0.05, '***'= 0.01)
+
+rows <- tribble(~term,          ~model1,  ~model2, ~model3, ~model4,
+                'Dependent variable', 'Monthly income',  'Monthly income',
+                'Hourly income', 'Hourly income')
+
+modelsummary(regs,
+             title = 'Estimated earnings functions',
+             stars = stars,
+             longtable = T,
+             vcov = 'robust',
+             add_rows = rows,
+             output = 'markdown',
+             note = 'HC3 heteroskedasticity-robust std. errors are presented in parentheses.')
+
+```
+
+This table presents the estimated earnings functions of four models (1)-(4). Each model is fitted with different covariates that may affect earnings, such as year, sex, age, schooling, marital status, race, urbanization, and work sector. The coefficients of each covariate and interaction terms are reported, along with their standard errors, t-values, and significance levels.
+
+The year2012 variable is also significant with a positive coefficient, implying that average earnings have increased over time. The variable Female is negative and statistically significant, suggesting that females earn less on average than males. The age variable is also significant and negative, indicating that earnings decrease with age. The schooling variables have positive and significant coefficients, indicating that more schooling leads to higher earnings. The last two variables, urbanUrban and publicPublic, are also significant, suggesting that working in urban areas and in the public sector leads to higher earnings.
+
+Model (2) includes interaction terms between year2012 and sexFemale. The coefficient of the interaction term is positive and statistically significant, indicating that the gender earnings gap has decreased over time, contrary to what was hypothesized. All of these models include monthly earnings as the dependent variable. However, Models (3) and (4) use hourly earnings assuming a 40 hour workweek (the standard for Ecuadorian law calculations), and repeat the analysis.
+
+Model (3) includes a quadratic term of experience (exp) in addition to the covariates used in Model (1). The coefficient of exp is positive and significant, implying that earnings increase with experience. The quadratic term I(exp^2) is negative and significant, suggesting that the rate of increase in earnings decreases as experience increases.
+
+Model (4) includes an interaction term between year2012 and sexFemale in addition to the covariates used in Model (3). The coefficient of the interaction term is not statistically significant, indicating that the gender earnings gap has not changed significantly after controlling for experience and its quadratic term.
+
+Overall, the $R^2$ values of the models suggest that the covariates included in the models explain around 36-40% of the variation in earnings. The standard errors of the coefficients are calculated using the HC3 method, which is a sample size adjustment to the common heteroskedasticity-adjusted errors HC1 which are default in Stata.
+
+## Plots for Oaxaca-Blinder estimations
+
+Below, I present the plots which give the results for the Oaxaca-Blinder decomposition done to a regression model which follows the Mincer earnings function, but does not include gender as two separate regressions are estimated.
+
+```{r}
+#| label: oaxaca
+#| fig-height: 6
+#| fig-width: 10
+
+plot(oax,
+     decomposition = 'twofold',
+     group.weight = 1,
+     title = 'Oaxaca Decomposition for monthly earnings',
+     xlab = 'Value',
+     ylab = 'Coefficient')
+
+```
+```{r}
+#| label: oaxacah
+#| fig-height: 6
+#| fig-width: 10
+
+plot(oax_h,
+     decomposition = 'twofold',
+     group.weight = 1,
+     title = 'Oaxaca Decomposition for hourly earnings',
+     xlab = 'Value',
+     ylab = 'Coefficient')
+
+```
+
+What these two decompositions imply is that (1) the discrimination component of women's intercept is highest, which can either mean that discrimination is very high in the country or that we lack enough variables to explain the gap. Further, it is seen that the most unexplained part of these regressions lie around the return of marriage. While married men make more than single men, the same difference appears for women, but it is much greater. 
+
+# References

@@ -159,7 +159,6 @@ df %>% select(PP_ID, hmsxl, income, sex)
 
 Thus, this table has a binary indicator for presumed homosexuality, as well as their income and other variables of interest.
 
-
 ## Building the table
 
 I now build my table. I just need to apply some value labels so that it looks nicer.
